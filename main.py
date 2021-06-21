@@ -1,59 +1,33 @@
-from robolink import *
-from robodk import *
-import pygame
 from time import sleep
 
-from robolink import *
-from robodk import *
+import pygame
 
-RDK = Robolink()
+from control.manipulator import ManipulatorControl
+from control.platfrom import Platform
 
-robot = RDK.ItemUserPick('Select a robot', ITEM_TYPE_ROBOT)
-# robot.setConnectionParams('192.168.2.35', 30001, '/', 'anonymous', '')
-
-assert robot.ConnectSafe() == ROBOTCOM_READY
-RDK.setRunMode(RUNMODE_RUN_ROBOT)
-
-
-# robot.setSpeed(300)
-
-# joints = robot.Joints()
-# target = robot.Pose()
-# pos = target.Pos()
-
-def move(dxyz, speed=30):
-    move = mult3(dxyz, speed)
-
-    pos = robot.SolveFK(robot.Joints())
-
-    new_pos = transl(move) * pos
-    new_joints = robot.SolveIK(new_pos)
-
-    if len(new_joints.tolist()) < 6:
-        return
-
-    robot.MoveJ(new_joints)
-
-    """
-    new_target = Mat(target)
-    pos = new_target.Pos()
-    pos = [pos[i] + d[i] for i in range(3)]
-    new_target.setPos(pos)
-    robot.MoveL(new_target)
-    """
-
+mc = ManipulatorControl("192.168.12.245", man_tool_speed=0.3, man_tool_acc=0.3)
+p = Platform('192.168.12.20')
 
 pygame.init()
 pygame.joystick.init()
 joy = pygame.joystick.Joystick(0)
 clk = pygame.time.Clock()
 
-while True:
-    for event in pygame.event.get():
-        pass
+base_speed = 0.5
+flag = True
 
-    vel = [joy.get_axis(i) for i in range(3)]
-    move(vel)
-    # clk.tick(20)
+print(1)
 
-pygame.quit()
+while p.ros.is_connected:
+    if True:
+        for event in pygame.event.get():
+            pass
+
+        vel = [joy.get_axis(i) * base_speed for i in range(3)]
+        if any(map(lambda x: abs(x) > 0.05, vel)):
+            p.drive(-vel[1], vel[2])
+            flag = True
+        elif flag:
+            flag = False
+            p.drive(0, 0)
+    sleep(0.01)
