@@ -5,11 +5,11 @@ import numpy as np
 
 from control.manipulator import ManipulatorControl
 
-mc = ManipulatorControl("192.168.12.245", man_tool_speed=0.3, man_tool_acc=0.3, activate_gripper=False)
-cap = cv2.VideoCapture(2)
+# mc = ManipulatorControl("192.168.12.245", man_tool_speed=0.3, man_tool_acc=0.3, activate_gripper=False)
+cap = cv2.VideoCapture(0)
 
-sz = (4, 4)
-crt = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 0.01)
+sz = (6, 7)
+crt = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
 def run():
@@ -17,6 +17,8 @@ def run():
 
     while True:
         _, img = cap.read()
+        img = cv2.resize(img, (400, 300))
+
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         r, corners = cv2.findChessboardCorners(gray, sz)
@@ -33,17 +35,17 @@ def run():
             print(diff)
             if abs(diff[0]) < 0.1 and abs(diff[1]) < 0.1:
                 print("Done")
-                mc.set_speed([0, 0, 0, 0, 0, 0])
+                # mc.set_speed([0, 0, 0, 0, 0, 0])
                 sleep(3)
-                mc.until_contact([0, 0, 0.1])
+                # mc.until_contact([0, 0, 0.1])
                 exit(0)
 
             spd = diff / 90
-            mc.set_speed([-spd[0], spd[1], 0, 0, 0, 0])
+            # mc.set_speed([-spd[0], spd[1], 0, 0, 0, 0])
 
         cv2.imshow('img', img)
         if cv2.waitKey(1) == 27:
-            mc.set_speed([0, 0, 0, 0, 0, 0])
+            # mc.set_speed([0, 0, 0, 0, 0, 0])
             exit(0)
 
 
