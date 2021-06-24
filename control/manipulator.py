@@ -1,10 +1,12 @@
+from time import sleep
+
 import numpy as np
 import rtde_control
 import rtde_receive
+from scipy.spatial.transform import Rotation as R
 
 from utils.robotiq_gripper import RobotiqGripper
 from utils.transform import rv2rpy, rotation_matrix_from_vectors, rpy2rv
-from scipy.spatial.transform import Rotation as R
 
 
 class ManipulatorControl:
@@ -60,7 +62,7 @@ class ManipulatorControl:
 
     def move_joints_rel(self, diff):
         q_cur = self.get_joints()
-        q_new = [q_cur[i] + diff[i] for i in range(6)]
+        q_new = [q_cur[i] + np.radians(diff[i]) for i in range(6)]
         return self.move_joints(q_new)
 
     def move_tool(self, pos):
@@ -91,6 +93,16 @@ class ManipulatorControl:
         if not self.rtde_ctrl.isConnected():
             self.rtde_ctrl.reconnect()
             # self.rtde_ctrl.reuploadScript()
+
+    def move_to_start(self):
+        self.move_joints_rel([90, 0, 0, 0, -180, 0])
+        sleep(1)
+        self.move_joints_rel([0, 40, -20, 20, 0, 0])
+        sleep(1)
+        self.move_tool_rel([0.1, 0, -0.1, 0, 0, 0])
+
+    def move_to_home(self):
+        self.rtde_ctrl.moveL([0.127, 0.351, 0.193, 3.96, 0.13, -0.04])
 
     def normal_to_target_pos(self, normal, as_rv=False):
         rot_d = self.get_rot()
