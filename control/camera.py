@@ -28,8 +28,16 @@ class Camera:
 
         self.transform = k4a.Transformation(self.calibration)
 
+    def __del__(self):
+        try:
+            self.device.stop_cameras()
+        except:
+            pass
+
     def capture(self):
         res = self.device.get_capture(-1)
+        if res is None:
+            return self.capture()
         depth = self.transform.depth_image_to_color_camera(res.depth)
         # cloud = self.transform.depth_image_to_point_cloud(depth, k4a.ECalibrationType.DEPTH).data.reshape(-1, 3)
         return res.color, depth, None
@@ -70,6 +78,10 @@ class Camera:
                 } for i in [f.readline().split() for _ in range(n)]]
 
             return res_img, res_labels, res_data
+
+    @staticmethod
+    def get_main_normal(data):
+        return max(data, key=lambda x: x["size"])['normal']
 
 
 if __name__ == "__main__":

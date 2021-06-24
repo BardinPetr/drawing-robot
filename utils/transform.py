@@ -1,8 +1,28 @@
-import numpy as np
 import math
 
+import numpy as np
+from scipy.spatial.transform import Rotation as R
 
-def translation(mas, rx, ry, rz, ox, oy, oz, width, height, pixel_width, pixel_height):
+
+def rv2rpy(data):
+    return R.from_rotvec(data).as_euler('xyz', True)
+
+
+def rpy2rv(data):
+    return R.from_euler('xyz', data, True).as_rotvec()
+
+
+def rotation_matrix_from_vectors(vec1, vec2):
+    a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (vec2 / np.linalg.norm(vec2)).reshape(3)
+    v = np.cross(a, b)
+    c = np.dot(a, b)
+    s = np.linalg.norm(v)
+    kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
+    return rotation_matrix
+
+
+def translate(mas, rx, ry, rz, ox, oy, oz, width, height, pixel_width, pixel_height):
     rotX = np.zeros((3, 3), np.float32)
     rotY = np.zeros((3, 3), np.float32)
     rotZ = np.zeros((3, 3), np.float32)
@@ -34,7 +54,6 @@ def translation(mas, rx, ry, rz, ox, oy, oz, width, height, pixel_width, pixel_h
             mat[0][0] = mas[i][j][0] * width / pixel_width
             mat[1][0] = mas[i][j][1] * height / pixel_height
 
-
             mat = np.dot(rotX, mat)
             mat = np.dot(rotY, mat)
             mat = np.dot(rotZ, mat)
@@ -43,9 +62,13 @@ def translation(mas, rx, ry, rz, ox, oy, oz, width, height, pixel_width, pixel_h
             mat[1][0] += oy
             mat[2][0] += oz
 
-            result[i][j] = np.arange(3)
+            result[i][j] = np.zeros(3, np.float64)
             result[i][j][0] = mat[0][0]
             result[i][j][1] = mat[1][0]
             result[i][j][2] = mat[2][0]
 
     return result
+
+
+def translate_one(vec, rx, ry, rz):
+    return translate([[vec]], rx, ry, rz, 0, 0, 0, 1, 1, 1, 1)[0][0]

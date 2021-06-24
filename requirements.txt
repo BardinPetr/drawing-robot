@@ -3,3 +3,4 @@ roslibpy~=1.2.1
 numpy~=1.20.2
 opencv-python
 open3d~=0.13.0
+scipy~=1.7.0

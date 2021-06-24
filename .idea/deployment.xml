@@ -5,7 +5,7 @@
       <paths name="main@192.168.43.211:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/main/drawing-robot" local="$PROJECT_DIR$" />
+            <mapping deploy="drawing-robot" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
