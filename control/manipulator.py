@@ -1,13 +1,13 @@
-from time import sleep
-
+from functools import reduce
+from time import sleep, time
+from pprint import pprint
 import numpy as np
 import rtde_control
 import rtde_receive
 from scipy.spatial.transform import Rotation as R
 
-from control.camera import Camera
 from utils.robotiq_gripper import RobotiqGripper
-from utils.transform import rv2rpy, rpy2rv, rotation_from_vectors
+from utils.transform import rv2rpy, rpy2rv, rotation_from_vectors, translate
 
 
 class ManipulatorControl:
@@ -21,7 +21,7 @@ class ManipulatorControl:
     def __init__(self, manipulator_ip,
                  man_speed=1, man_acc=1.4,
                  man_tool_speed=0.25, man_tool_acc=1.2,
-                 grip_speed=100, grip_force=100,
+                 grip_speed=70, grip_force=100,
                  activate_gripper=True):
         self.ip = manipulator_ip
 
@@ -49,7 +49,7 @@ class ManipulatorControl:
         if self.last_tcp_pos == res:
             self.check_conn()
         self.last_tcp_pos = res
-        return res
+        return np.array(res)
 
     def get_pos(self):
         return self.get_pos_full()[:3]
@@ -73,19 +73,19 @@ class ManipulatorControl:
         q_new = [q_cur[i] + np.radians(diff[i]) for i in range(6)]
         return self.move_joints(q_new)
 
-    def move_tool(self, pos):
+    def move_tool(self, pos, do_async=False):
         pos = pos if len(pos) == 6 else [*pos, *self.get_rot(True)]
-        print(pos)
-        return self.rtde_ctrl.moveL(pos, self.man_tool_speed, self.man_tool_acc)
+        return self.rtde_ctrl.moveL(pos, self.man_tool_speed, self.man_tool_acc, do_async)
 
-    def move_tool_rel(self, diff):
+    def move_tool_rel(self, diff, do_async=False):
         diff = diff if len(diff) == 6 else [*diff, 0, 0, 0]
         p_cur = self.get_pos_full()
         p_new = [p_cur[i] + diff[i] for i in range(len(p_cur))]
-        return self.move_tool(p_new)
+        return self.move_tool(p_new, do_async)
 
     def until_contact(self, vel):
         self.rtde_ctrl.moveUntilContact([*vel, 0, 0, 0])
+        sleep(1)
         return self.get_pos()
 
     def set_speed(self, vel):
@@ -141,27 +141,84 @@ class ManipulatorControl:
 
         cur = self.get_pos()
         res = self.move_tool([*cur, *target])
-
         return res
+
+    def _calibrate_in_move(self, cam, vel, time_target=2):
+        normals = []
+        self.set_speed(vel)
+        start_time = time()
+        while time() - start_time < time_target:
+            new_n = cam.basic_get_normal()
+            normals.append(new_n)
+        self.set_speed([0, 0, 0, 0, 0, 0])
+        self.rtde_ctrl.speedStop(5)
+        return normals
+
+    def full_calibration(self, cam):
+        self.align_perpendicular(cam.basic_get_normal())
+        normals = reduce(lambda x, i: x + self._calibrate_in_move(cam, i, 2), [
+            [0, 0, 0, 0.1, 0, 0],
+            [0, 0, 0, -0.1, 0, 0],
+            [0, 0, 0, -0.1, 0, 0],
+            [0, 0, 0, 0.1, 0, 0],
+            [0, 0, 0, 0, 0.1, 0],
+            [0, 0, 0, 0, -0.1, 0],
+            [0, 0, 0, 0, -0.1, 0],
+            [0, 0, 0, 0, 0.1, 0]
+        ], [])
+        normal = np.average(np.array(normals), axis=0)
+        self.align_perpendicular(normal)
+        return normal
 
     def calibrate_distance(self):
         if self.plane_normal is None:
             raise Exception("Not selected plane")
 
-        self.plane_touch = self.until_contact(self.plane_normal * 0.1)
+        self.plane_touch = self.until_contact(self.plane_normal * 0.02)
+        self.pen_up()
 
     def to_plane_contact(self):
         self.move_tool(self.plane_touch)
 
-    def pen_down(self, dist=0.05):
+    def pen_down(self):
         if self.plane_normal is None:
             raise Exception("Not selected plane")
-        self.move_tool_rel(self.plane_normal * dist)
+        self.until_contact(self.plane_normal * 0.04)
+        # self.move_tool_rel(self.plane_normal * dist)
 
     def pen_up(self, dist=0.05):
         if self.plane_normal is None:
             raise Exception("Not selected plane")
-        self.move_tool_rel(self.plane_normal * -dist)
+        self.move_tool([*(self.plane_touch - self.plane_normal * dist), *self.plane_orient])
+
+    def prepare_contours(self, data, width, height, pixel_width, pixel_height):
+        return translate(
+            data,
+            *self.plane_orient,
+            *self.plane_touch,
+            width, height, pixel_width, pixel_height,
+            inverse=True
+        )
+
+    def draw_contour(self, data, dt=1.0 / 500, force=1):
+        self.pen_up()
+        pos = [[*i, *self.plane_orient, 0.3, 0.2, 0] for i in data]
+        self.rtde_ctrl.moveL(pos, True)
+        sleep(0.5)
+        while self.rtde_recv.getAsyncOperationProgress() > -1:
+            start = time()
+            self.rtde_ctrl.forceMode([0, 0, 0, *self.plane_orient],
+                                     [0, 0, 1, 0, 0, 0],
+                                     [0, 0, force, 0, 0, 0],
+                                     1,
+                                     [2, 2, 1.5, 1, 1, 1])
+            end = time()
+            duration = end - start
+            if duration < dt:
+                sleep(dt - duration)
+
+        self.rtde_ctrl.forceModeStop()
+        self.pen_up()
 
 
 if __name__ == "__main__":

@@ -86,6 +86,11 @@ class Camera:
     def get_main_normal(data):
         return max(data, key=lambda x: x["size"])['normal']
 
+    def basic_get_normal(self):
+        color, depth, _ = self.capture()
+        _, _, res_data = self.detect_planes(color.data, depth.data)
+        return Camera.get_main_normal(res_data)
+
 
 if __name__ == "__main__":
     # mc = ManipulatorControl("192.168.12.245", man_tool_speed=0.3, man_tool_acc=0.3, activate_gripper=False)

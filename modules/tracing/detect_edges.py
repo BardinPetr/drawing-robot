@@ -1,14 +1,15 @@
 import cv2 as cv
 import numpy as np
 import tensorflow as tf
-from src.model import DexiNed
+
+from modules.tracing.model import DexiNed
 
 
 def build():
     global model
     model = DexiNed([0, 0, 0])
     model.build((None, 512, 512, 3))
-    model.load_weights("src/DexiNed23_model.h5")
+    model.load_weights("modules/tracing/DexiNed23_model.h5")
     # model.summary()
 
 

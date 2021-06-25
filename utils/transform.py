@@ -22,7 +22,7 @@ def rotation_from_vectors(vec1, vec2):
     return R.from_matrix(rotation_matrix)
 
 
-def translate(mas, rx, ry, rz, ox, oy, oz, width, height, pixel_width, pixel_height):
+def translate(mas, rx, ry, rz, ox, oy, oz, width, height, pixel_width, pixel_height, inverse=False):
     r = R.from_euler('xyz', [rx, ry, rz], degrees=True)
 
     result = [0] * len(mas)
@@ -31,7 +31,7 @@ def translate(mas, rx, ry, rz, ox, oy, oz, width, height, pixel_width, pixel_hei
         result[i] = [0] * len(mas[i])
         for j in range(len(mas[i])):
             mat = np.zeros((3,), np.float64)
-            mat[0] = mas[i][j][0] * width / pixel_width
+            mat[0] = mas[i][j][0] * width / pixel_width * (-1 if inverse else 1)
             mat[1] = mas[i][j][1] * height / pixel_height
 
             mat = r.apply(mat)

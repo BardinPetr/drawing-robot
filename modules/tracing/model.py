@@ -1,8 +1,7 @@
-from tensorflow.keras import callbacks
-from tensorflow.keras import layers, regularizers
-from tensorflow.keras import backend as K
-from tensorflow import keras
 import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import backend as K
+from tensorflow.keras import layers, regularizers
 
 l2 = regularizers.l2
 w_decay = 1e-3  # 0.0#2e-4#1e-3, 2e-4 # please define weight decay
