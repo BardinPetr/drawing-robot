@@ -4,3 +4,8 @@ numpy~=1.20.2
 opencv-python
 open3d~=0.13.0
 scipy~=1.7.0
+tensorflow==2.2
+opencv-contrib-python
+pillow
+scikit-image
+numba

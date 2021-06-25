@@ -1,5 +1,6 @@
 from subprocess import run
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+from time import sleep
 
 import cv2
 import k4a
@@ -37,6 +38,8 @@ class Camera:
     def capture(self):
         res = self.device.get_capture(-1)
         if res is None:
+            print("Capture failed")
+            sleep(0.5)
             return self.capture()
         depth = self.transform.depth_image_to_color_camera(res.depth)
         # cloud = self.transform.depth_image_to_point_cloud(depth, k4a.ECalibrationType.DEPTH).data.reshape(-1, 3)
@@ -69,12 +72,12 @@ class Camera:
             with open(res_dir + "/0-plane-data.txt", 'r') as f:
                 _ = f.readline()
                 res_data = [{
-                    "i": int(i[0]),
-                    "size": int(i[1]),
-                    "color": np.array([int(j) for j in i[2:5]]),
+                    "i":      int(i[0]),
+                    "size":   int(i[1]),
+                    "color":  np.array([int(j) for j in i[2:5]]),
                     "normal": np.array([float(j) for j in i[5:8]]),
                     "center": np.array([float(j) for j in i[8:11]]),
-                    "dist": float(res_stdout.pop(0).split()[-1])
+                    "dist":   float(res_stdout.pop(0).split()[-1])
                 } for i in [f.readline().split() for _ in range(n)]]
 
             return res_img, res_labels, res_data

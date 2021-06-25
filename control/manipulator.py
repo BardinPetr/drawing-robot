@@ -5,13 +5,18 @@ import rtde_control
 import rtde_receive
 from scipy.spatial.transform import Rotation as R
 
+from control.camera import Camera
 from utils.robotiq_gripper import RobotiqGripper
-from utils.transform import rv2rpy, rotation_matrix_from_vectors, rpy2rv
+from utils.transform import rv2rpy, rpy2rv, rotation_from_vectors
 
 
 class ManipulatorControl:
     last_joints_pos = None
     last_tcp_pos = None
+
+    plane_orient = None
+    plane_normal = None
+    plane_touch = None
 
     def __init__(self, manipulator_ip,
                  man_speed=1, man_acc=1.4,
@@ -39,15 +44,18 @@ class ManipulatorControl:
         self.rtde_ctrl.disconnect()
         self.rtde_recv.disconnect()
 
-    def get_pos(self):
+    def get_pos_full(self):
         res = self.rtde_recv.getActualTCPPose()
         if self.last_tcp_pos == res:
             self.check_conn()
         self.last_tcp_pos = res
         return res
 
+    def get_pos(self):
+        return self.get_pos_full()[:3]
+
     def get_rot(self, as_rv=False):
-        rv = self.get_pos()[3:]
+        rv = self.get_pos_full()[3:]
         return np.array(rv if as_rv else rv2rpy(rv))
 
     def get_joints(self):
@@ -66,10 +74,13 @@ class ManipulatorControl:
         return self.move_joints(q_new)
 
     def move_tool(self, pos):
+        pos = pos if len(pos) == 6 else [*pos, *self.get_rot(True)]
+        print(pos)
         return self.rtde_ctrl.moveL(pos, self.man_tool_speed, self.man_tool_acc)
 
     def move_tool_rel(self, diff):
-        p_cur = self.get_pos()
+        diff = diff if len(diff) == 6 else [*diff, 0, 0, 0]
+        p_cur = self.get_pos_full()
         p_new = [p_cur[i] + diff[i] for i in range(len(p_cur))]
         return self.move_tool(p_new)
 
@@ -108,8 +119,7 @@ class ManipulatorControl:
         rot_d = self.get_rot()
         res = R.from_euler("xyz", rot_d, True).apply(normal) * -1
 
-        rmat = rotation_matrix_from_vectors([0, 0, 1], res)
-        target = -R.from_matrix(rmat).as_euler('xyz', True)
+        target = -rotation_from_vectors([0, 0, 1], res).as_euler('xyz', True)
 
         if abs(rot_d[2] - target[2]) > 100:
             target[2] = 180 - abs(target[2])
@@ -123,21 +133,39 @@ class ManipulatorControl:
 
         return rpy2rv(target) if as_rv else target
 
+    def align_perpendicular(self, normal):
+        target = self.normal_to_target_pos(normal, as_rv=True)
+
+        self.plane_normal = normal / np.linalg.norm(normal)
+        self.plane_orient = target
+
+        cur = self.get_pos()
+        res = self.move_tool([*cur, *target])
+
+        return res
+
+    def calibrate_distance(self):
+        if self.plane_normal is None:
+            raise Exception("Not selected plane")
+
+        self.plane_touch = self.until_contact(self.plane_normal * 0.1)
+
+    def to_plane_contact(self):
+        self.move_tool(self.plane_touch)
+
+    def pen_down(self, dist=0.05):
+        if self.plane_normal is None:
+            raise Exception("Not selected plane")
+        self.move_tool_rel(self.plane_normal * dist)
+
+    def pen_up(self, dist=0.05):
+        if self.plane_normal is None:
+            raise Exception("Not selected plane")
+        self.move_tool_rel(self.plane_normal * -dist)
+
 
 if __name__ == "__main__":
     mc = ManipulatorControl("192.168.12.245", man_tool_speed=0.3, man_tool_acc=0.3, activate_gripper=False)
 
     while True:
         print("%0.5f %0.5f %0.5f %0.5f %0.5f %0.5f" % (*list(mc.rtde_recv.getActualTCPPose()),))
-        # mc.move_tool_rel([0, 0, 0, 0.1, 0, 0])
-        # mc.move_tool_rel([0.05, 0, 0.05, 0, 0, 0])
-        # mc.grip(True)
-        # sleep(1)
-        # mc.grip(False)
-        # mc.check_conn()
-        # mc.until_contact([0, 0, -0.1])
-        # sleep(3)
-        # mc.move_tool_rel([0, 0, 0, -0.1, 0, 0])
-        # mc.move_tool_rel([0.05, 0, -0.05, 0, 0, 0])
-        # mc.until_contact([0, -0.4, 0])
-        # sleep(0.01)
