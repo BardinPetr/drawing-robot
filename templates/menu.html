@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<head>
+    <title>Menu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=2">
+</head>
+<body>
+    <h1>Select action</h1>
+    <form method=post action=/>
+        <input type=submit name=actions value="drive robot"> <br>
+        <input type=submit name=actions value="choose tracing method"> <br>
+        <input type=submit name=actions value="upload image"> <br>
+        <input type=submit name=actions value="show preview" {{ enabled }}> <br>
+        <input type=submit name=actions value="start drawing" {{ enabled }}>
+    </form>
+</body>
