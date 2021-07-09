@@ -18,5 +18,7 @@ def draw(contours, image_width, image_height, width, height):
     # data_m = list(filter(lambda x: len(x) > 10, data_m))
     for i in data_m:
         print("Contour len", len(i))
-        mc.draw_contour(i, force=0.5)
+        mc.draw_contour(i, force=4)
+        
+    mc.pen_start(dist=0.05)
     

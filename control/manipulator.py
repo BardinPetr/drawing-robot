@@ -9,6 +9,9 @@ from scipy.spatial.transform import Rotation as R
 from utils.robotiq_gripper import RobotiqGripper
 from utils.transform import rv2rpy, rpy2rv, rotation_from_vectors, translate, translate_one
 
+import cv2
+import math
+
 
 class ManipulatorControl:
     last_joints_pos = None
@@ -172,6 +175,50 @@ class ManipulatorControl:
         ], [])
         normal = np.average(np.array(normals), axis=0)
         self.align_perpendicular(normal)
+        
+        while self.rtde_recv.getAsyncOperationProgress() > -1:
+            pass
+            
+        joints = self.get_joints()
+        joints[5] = -math.radians(100)
+        self.move_joints(joints)
+        
+        flag = True
+        while flag:
+            while self.rtde_recv.getAsyncOperationProgress() > -1:
+                pass
+            
+            image_capture, _, _ = cam.capture()
+            image = image_capture.data
+            frame = np.zeros((len(image), len(image[0]), 3), np.uint8)
+            for i in range(len(image)):
+                for j in range(len(image[i])):
+                    frame[i][j][0] = image[i][j][0]
+                    frame[i][j][1] = image[i][j][1]
+                    frame[i][j][2] = image[i][j][2]
+        
+            #print(frame)
+            qrDecoder = cv2.QRCodeDetector()
+            data, bbox, rectifiedCode = qrDecoder.detectAndDecode(frame)
+            if len(data) > 0:
+                dx = int(bbox[0][2][0]) - int(bbox[0][1][0])
+                dy = int(bbox[0][2][1]) - int(bbox[0][1][1])
+                angle = math.degrees(math.atan2(dx, dy))
+                self.move_joints_rel([0, 0, 0, 0, 0, -angle])
+                print(angle)
+                while self.rtde_recv.getAsyncOperationProgress() > -1:
+                    pass
+                self.plane_orient = self.get_rot(as_rv = True)
+                flag = False
+            else:
+                print("not found QR-code")
+                joints = self.get_joints()
+                joints[5] += math.radians(10)
+                if joints[5] < math.radians(100):
+                    self.move_joints(joints)
+                else:
+                    flag = False
+        
         return normal
 
     def calibrate_distance(self):
@@ -224,7 +271,7 @@ class ManipulatorControl:
                                      [0, 0, 1, 0, 0, 0],
                                      [0, 0, force, 0, 0, 0],
                                      1,
-                                     [2, 2, 1.5, 1, 1, 1])
+                                     [100, 100, 100, 1, 1, 1])
             end = time()
             duration = end - start
             if duration < dt:
@@ -240,7 +287,7 @@ class ManipulatorControl:
                                      [0, 0, 1, 0, 0, 0],
                                      [0, 0, force, 0, 0, 0],
                                      1,
-                                     [2, 2, 1.5, 1, 1, 1])
+                                     [100, 100, 100, 1, 1, 1])
             end = time()
             duration = end - start
             if duration < dt:
