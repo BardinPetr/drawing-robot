@@ -4,13 +4,14 @@ from werkzeug.utils import secure_filename
 
 from tracing.tracing import tracing
 from control.platform import Platform
+from drawing.drawing import draw
 
 
 print("connecting to the robot...")
-p = Platform('192.168.12.20')
+#p = Platform('192.168.12.20')
 platform_action = 0  # 0-stop/1-forward/2-backward/3-left/4-right
 
-UPLOAD_FOLDER = 'C:/images'
+UPLOAD_FOLDER = '/home/main/upload_server'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
@@ -19,6 +20,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 image_loaded = False  # True - image loaded
 tracing_method = True  # True - algorithm / False - neuronet
 shading = False  # True - enabled / False - disabled
+
+contours = 0
+w = 0  # image width
+h = 0  # image height
 
 
 def allowed_file(filename):
@@ -68,7 +73,8 @@ def upload():
             global image_loaded
             if tracing_method:
                 image_loaded = True
-                contours = tracing(filename, shading=shading)
+                global contours, w, h
+                contours, w, h = tracing(filename, shading=shading)
             else:
                 return 'Neuronet is not available. Choose another tracing method please.'
             return redirect(url_for('menu'))
@@ -91,23 +97,23 @@ def control():
         button = request.form['drive']
         print(button)
         if button == 'forward':
-            p.drive(0.1, 0.0)
+            #p.drive(0.1, 0.0)
             platform_action = 1
         if button == 'backward':
-            p.drive(-0.1, 0.0)
+            #p.drive(-0.1, 0.0)
             platform_action = 2
         if button == 'left':
-            p.drive(0.0, 0.1)
+            #p.drive(0.0, 0.1)
             platform_action = 3
         if button == 'right':
-            p.drive(0.0, -0.1)
+            #p.drive(0.0, -0.1)
             platform_action = 4
         if button == 'stop':
-            p.drive(0.0, 0.0)
+            #p.drive(0.0, 0.0)
             platform_action = 0
 
         if button == '<<back':
-            p.drive(0.0, 0.0)
+            #p.drive(0.0, 0.0)
             platform_action = 0
             return redirect(url_for('menu'))
 
@@ -118,10 +124,15 @@ def control():
 def select_size():
     if request.method == 'POST':
         if request.form['confirm'] == 'confirm':
-            width = request.form['width']
-            height = request.form['height']
-            print('width ' + width)
-            print('height ' + height)
+            width = int(request.form['width'])
+            height = int(request.form['height'])
+            width = width/100
+            height = height/100
+            # print('width ' + width)
+            # print('height ' + height)
+            global contours, w, h
+            draw(contours, w, h, width, height)
+            return 'drawing complete'
         else:
             return redirect(url_for('menu'))
     return render_template('select_size.html')
@@ -147,22 +158,22 @@ def select_tracing():
     return render_template('tracing_method.html')
 
 
-# def control():
-#     global platform_action
-#     while True:
-#         if platform_action != 0:
-#             print(platform_action)
-#
-#         if platform_action == 0:
-#             p.drive(0.0, 0.0)
-#         elif platform_action == 1:
-#             p.drive(0.1, 0.0)
-#         elif platform_action == 2:
-#             p.drive(-0.1, 0.0)
-#         elif platform_action == 3:
-#             p.drive(0.0, 0.1)
-#         elif platform_action == 4:
-#             p.drive(0.0, -0.1)
+'''def control():
+    global platform_action
+    while True:
+        if platform_action != 0:
+            print(platform_action)
+
+        if platform_action == 0:
+            p.drive(0.0, 0.0)
+        elif platform_action == 1:
+            p.drive(0.1, 0.0)
+        elif platform_action == 2:
+            p.drive(-0.1, 0.0)
+        elif platform_action == 3:
+            p.drive(0.0, 0.1)
+        elif platform_action == 4:
+            p.drive(0.0, -0.1)'''
 
 
 def flask_start():

@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
-import shutil
+import shutil, os
 
 
 def tracing(filename, shading=False):
-    frame = cv2.imread("C:/images/" + filename)
+    frame = cv2.imread("/home/main/upload_server/" + filename)
     gauss_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gauss_frame = cv2.GaussianBlur(gauss_frame, (7, 7), 0)
     (w, h) = gauss_frame.shape
@@ -88,6 +88,7 @@ def tracing(filename, shading=False):
                 routes[i][j][1] = contours[i][j][0][1]
 
     edge_frame = cv2.bitwise_not(edge_frame)
-    cv2.imwrite("C:/images/preview.jpg", edge_frame)
-    shutil.copy("C:/images/preview.jpg", "C:/Users/Михаил/PycharmProjects/upload_server/static/preview.jpg")
-    return routes
+    cv2.imwrite("/home/main/upload_server/static/preview.jpg", edge_frame)
+    os.remove("/home/main/upload_server/" + filename)
+    # shutil.copy("C:/images/preview.jpg", "C:/Users/Михаил/PycharmProjects/upload_server/static/preview.jpg")
+    return routes, h, w
