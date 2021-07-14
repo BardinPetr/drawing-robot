@@ -85,11 +85,20 @@ class Camera:
     @staticmethod
     def get_main_normal(data):
         return max(data, key=lambda x: x["size"])['normal']
+        
+    @staticmethod
+    def get_main_normal_dist(data):
+        return max(data, key=lambda x: x["size"])['dist']
 
     def basic_get_normal(self):
         color, depth, _ = self.capture()
         _, _, res_data = self.detect_planes(color.data, depth.data)
         return Camera.get_main_normal(res_data)
+        
+    def basic_get_normal_dist(self):
+        color, depth, _ = self.capture()
+        _, _, res_data = self.detect_planes(color.data, depth.data)
+        return Camera.get_main_normal_dist(res_data)
 
 
 if __name__ == "__main__":

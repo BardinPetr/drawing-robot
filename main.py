@@ -8,13 +8,13 @@ from drawing.drawing import draw
 
 
 print("connecting to the robot...")
-#p = Platform('192.168.12.20')
+#p = Platform('192.168.12.20') # подключение к платформе | закомментировать если платформа не включена
 platform_action = 0  # 0-stop/1-forward/2-backward/3-left/4-right
 
-UPLOAD_FOLDER = '/home/main/upload_server'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+UPLOAD_FOLDER = '/home/main/upload_server' # папка куда сохраняются загруженные картинки
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'} # допустимые форматы изображений
 
-app = Flask(__name__)
+app = Flask(__name__) # инициализируем фласк
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 image_loaded = False  # True - image loaded
@@ -26,13 +26,13 @@ w = 0  # image width
 h = 0  # image height
 
 
-def allowed_file(filename):
+def allowed_file(filename): # проверка формата файлов
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/', methods=['GET', 'POST'])
-def menu():
+@app.route('/', methods=['GET', 'POST']) 
+def menu(): # меню
     if request.method == 'POST':
         action = request.form['actions']
         if action == 'drive robot':
@@ -52,7 +52,7 @@ def menu():
 
 
 @app.route('/upload', methods=['GET', 'POST'])
-def upload():
+def upload(): # страница загрузки
     if request.method == 'POST':
         # check if the post request has the file part
         # if 'file' not in request.files:
@@ -67,14 +67,14 @@ def upload():
         if file.filename == '':
             # flash('No selected file')
             return render_template('upload_page.html')
-        if file and allowed_file(file.filename):
+        if file and allowed_file(file.filename): # если файл подходит, то его сохраняем
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             global image_loaded
             if tracing_method:
                 image_loaded = True
                 global contours, w, h
-                contours, w, h = tracing(filename, shading=shading)
+                contours, w, h = tracing(filename, shading=shading) # производим трейсинг изображения
             else:
                 return 'Neuronet is not available. Choose another tracing method please.'
             return redirect(url_for('menu'))
@@ -82,7 +82,7 @@ def upload():
 
 
 @app.route('/preview', methods=['GET', 'POST'])
-def preview():
+def preview(): # страничка предпросмотра
     if request.method == 'POST':
         return redirect(url_for('menu'))
 
@@ -91,7 +91,7 @@ def preview():
 
 
 @app.route('/control', methods=['GET', 'POST'])
-def control():
+def control(): # управление платформой
     global platform_action
     if request.method == 'POST':
         button = request.form['drive']
@@ -121,7 +121,7 @@ def control():
 
 
 @app.route('/select_size', methods=['GET', 'POST'])
-def select_size():
+def select_size(): # ввод размеров рисунка
     if request.method == 'POST':
         if request.form['confirm'] == 'confirm':
             width = int(request.form['width'])
@@ -131,7 +131,7 @@ def select_size():
             # print('width ' + width)
             # print('height ' + height)
             global contours, w, h
-            draw(contours, w, h, width, height)
+            draw(contours, w, h, width, height) # рисование
             return 'drawing complete'
         else:
             return redirect(url_for('menu'))
@@ -139,7 +139,7 @@ def select_size():
 
 
 @app.route('/select_tracing', methods=['GET', 'POST'])
-def select_tracing():
+def select_tracing(): # выбор метода трейсинга
     if request.method == 'POST':
         global tracing_method
         global shading
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     # t1.start()
     # t2 = threading.Thread(target=flask_start())
     # t2.start()
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000) # запуск локального сервера
     while True:
         pass
     # app.run(host="0.0.0.0", port=5000)

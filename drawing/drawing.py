@@ -6,7 +6,7 @@ from control.manipulator import ManipulatorControl
 def draw(contours, image_width, image_height, width, height):
     cam = Camera()
 
-    mc = ManipulatorControl("192.168.13.2", man_tool_speed=0.3, man_tool_acc=0.3, activate_gripper=False)
+    mc = ManipulatorControl("192.168.13.2", man_tool_speed=0.5, man_tool_acc=0.3, activate_gripper=False)
     
     normal = mc.full_calibration(cam)
 
@@ -18,7 +18,7 @@ def draw(contours, image_width, image_height, width, height):
     # data_m = list(filter(lambda x: len(x) > 10, data_m))
     for i in data_m:
         print("Contour len", len(i))
-        mc.draw_contour(i, force=4)
+        mc.draw_contour(i, force=0.5)
         
     mc.pen_start(dist=0.05)
     

@@ -22,6 +22,8 @@ def tracing(filename, shading=False):
             gray_frame[i][j] = ((hsv_frame[i][j][2] << 8) + hsv_frame[i][j][0])/256
 
     edge_frame = cv2.Canny(gray_frame, 0, 30, L2gradient=True)
+    #_, edge_frame = cv2.threshold(gray_frame, 150, 255, 0)
+    # edge_frame = cv2.bitwise_not(edge_frame)
     connected = cv2.connectedComponentsWithStats(edge_frame, 8, cv2.CV_32S)
     labels = connected[1]
     stats = connected[2]
