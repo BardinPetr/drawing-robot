@@ -86,16 +86,6 @@
             <div class="col-sm-6">
                 <div class="mb-1 mb-sm-3">
                     <h6 class="display-6">
-                      Загрузка изображения
-                    </h6>
-                    <form action="/upload"
-                      class="dropzone"
-                      id="ImageForRobotDropzone"></form>
-                </div>
-
-
-                <div class="mb-1 mb-sm-3">
-                    <h6 class="display-6">
                       Метод трассировки
                     </h6>
 
@@ -117,6 +107,15 @@
                         затенение
                       </label>
                     </div>
+                </div>
+
+                <div class="mb-1 mb-sm-3">
+                    <h6 class="display-6">
+                      Загрузка изображения
+                    </h6>
+                    <form action="/upload"
+                      class="dropzone"
+                      id="ImageForRobotDropzone"></form>
                 </div>
 
                 <div class="mb-1 mb-sm-3">
@@ -263,6 +262,9 @@
       acceptedFiles: "image/*",
       dictDefaultMessage: "Перетащите файл сюда или кликните для загрузки",
       init: function() {
+        this.on("sending", function() {
+            saveTracertMethod();
+        });
         this.on("success", function() {
             document.getElementById('btnShowPreview').removeAttribute("disabled");
             document.getElementById('btnStartDrawing').removeAttribute("disabled");
@@ -280,13 +282,17 @@
 
 
     function saveTracertMethod(){
-        console.log("save-tracert-method")
-        var select = document.querySelector('input[name="tracingMethod"]:checked').value;
-        var shading = document.getElementById('tracingMethod-Shading').checked;
-
         var xhr = createXHR();
-        xhr.open('GET', '/select_tracing?select='+select+'&confirm=confirm'+(shading ? '&shading=shading': ''), true)
-        xhr.send()
+        xhr.open('POST', '/select_tracing', true)
+
+        var formData = new FormData();
+		formData.append("select", document.querySelector('input[name="tracingMethod"]:checked').value);
+		formData.append("confirm", "confirm");
+		if (document.getElementById('tracingMethod-Shading').checked){
+			formData.append("shading", "shading");
+		}
+
+        xhr.send(formData)
     }
 
     function showPreview(){
@@ -304,18 +310,20 @@
     }
 
     function startDrawing(){
-        var w = document.getElementById('widthPicture').value;
-        var h = document.getElementById('heightPicture').value;
-
         var xhr = createXHR();
-        xhr.open('GET', '/select_size?width='+w+'&height='+h, true)
-        xhr.send()
+        xhr.open('POST', '/select_size', true)
+        var formData = new FormData();
+		formData.append("width", document.getElementById('widthPicture').value);
+		formData.append("height", document.getElementById('heightPicture').value);
+        xhr.send(formData)
     }
 
     function drive(direction){
         var xhr = createXHR();
-        xhr.open('GET', '/control?drive='+direction, true)
-        xhr.send()
+        xhr.open('POST', '/control', true)
+        var formData = new FormData();
+		formData.append("drive", direction);
+        xhr.send(formData)
     }
 </script>
 </body>
