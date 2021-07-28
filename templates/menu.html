@@ -4,78 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/static/front/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <link href="/static/front/dropzone.min.css" rel="stylesheet" crossorigin="anonymous">
-    <style type="text/css">
-        svg {
-          height: 330px;
-          width: 330px;
-
-          --d:dodgerblue;
-          --r:red;
-          --g:yellowgreen;
-        }
-
-        #spot {
-          fill:white;
-          pointer-events:none;
-          }
-         #arrow {
-         fill:none;
-         stroke:white;
-         stroke-width:2;
-         pointer-events:none;
-         }
-
-        #center {
-        fill:#797979;
-        stroke:#FFFFFF;
-        stroke-width:3;
-        cursor: pointer;
-        -webkit-transition: all 0.8s ease;
-          transition: all 0.8s ease;
-
-        }
-        #center:hover {
-        fill: var(--r);
-        filter:url(#drop-shadow);
-        }
-
-        #s1,#s3, #s5, #s7 {
-        fill:#3A3A3A;
-        cursor: pointer;
-         -webkit-transition: all 0.8s ease;
-          transition: all 0.8s ease;
-        }
-
-        #s2,#s4,#s6,#s8 {
-        fill:#797979;
-        cursor: pointer;
-        -webkit-transition: all 0.8s ease;
-          transition: all 0.8s ease;
-        }
-        #s1:hover, #s3:hover, #s5:hover, #s7:hover  {
-         fill: var(--g);
-         filter:url(#drop-shadow);
-        }
-        .dropzone{
-            border: 1px dashed #0087F7;
-            border-radius: .25rem;
-            min-height: 30px;
-            padding: 10px 10px;
-        }
-        .dropzone .dz-message {
-            text-align: center;
-            margin: 1em 0;
-        }
-
-        .modal.show{
-            display:block;
-            background: rgba(0, 0, 0, .6);
-            -webkit-transition: all 1s ease;
-            -moz-transition: all 1s ease;
-            -o-transition: all 1s ease;
-            transition: all 1s ease;
-        }
-    </style>
+    <link href="/static/front/joystick.css" rel="stylesheet" crossorigin="anonymous">
     <script src="/static/front/dropzone.min.js"></script>
 </head>
 <body>
@@ -104,7 +33,7 @@
                     <div class="form-check mt-2">
                       <input class="form-check-input" type="checkbox" value="shading" id="tracingMethod-Shading">
                       <label class="form-check-label" for="tracingMethod-Shading">
-                        затенение
+                        штриховка
                       </label>
                     </div>
                 </div>
@@ -170,7 +99,7 @@
                       <!-- Сегменты окружности с рабочими ссылками Переход по клику -->
                         <g transform="rotate(-22.5 55 55)" >
                             <a xlink:href="javascript:drive('right');">
-                                <title> Right </title>
+                                <title> Вправо </title>
                               <path id="s1"  d="M 55 55 L 105 55 A 50 50 0 0 1 90.35 90.35 Z"/>
                             </a>
                             <a xlink:href="javascript:drive('right');">
@@ -178,7 +107,7 @@
                              </a>
 
                             <a xlink:href="javascript:drive('backward');">
-                                <title> Backward </title>
+                                <title> Назад </title>
                                 <path id="s3"  d="M 55 55 L 55 105 A 50 50 0 0 1 19.6447 90.35 Z" />
                             </a>
                             <a xlink:href="javascript:drive('backward');">
@@ -186,7 +115,7 @@
                             </a>
 
                             <a xlink:href="javascript:drive('left');">
-                                 <title> Left </title>
+                                 <title> Влево </title>
                                 <path id="s5"  d="M 55 55 L 5 55 A 50 50 0 0 1 19.64 19.64 Z" />
                             </a>
                             <a xlink:href="javascript:drive('left');">
@@ -194,7 +123,7 @@
                             </a>
 
                             <a xlink:href="javascript:drive('forward');">
-                                 <title> Forward </title>
+                                 <title> Вперед </title>
                                 <path id="s7"  d="M 55 55 L 55 5 A 50 50 0 0 1 90.35 19.64 Z" />
                             </a>
                             <a xlink:href="javascript:drive('forward');">
@@ -202,7 +131,7 @@
                             </a>
                         </g>
                         <a xlink:href="javascript:drive('stop');">
-                            <title> Stop </title>
+                            <title> Стоп </title>
                             <circle id="center" cx='55' cy='55' r='17'  />
                         </a>
                         <!-- Белые круги -->
@@ -231,29 +160,43 @@
 <!--    </form>-->
 
 <script>
+    var _isMoving = false
+    var _currentDirection = ''
+    var _moveTimer
+
     //-------small-xhr-library-------------
     function createXHR()
     {
-        var xhr;
+        var xhr
         if (window.ActiveXObject)
         {
             try
             {
-                xhr = new ActiveXObject("Microsoft.XMLHTTP");
+                xhr = new ActiveXObject("Microsoft.XMLHTTP")
             }
             catch(e)
             {
-                alert(e.message);
-                xhr = null;
+                alert(e.message)
+                xhr = null
             }
         }
         else
         {
-            xhr = new XMLHttpRequest();
+            xhr = new XMLHttpRequest()
         }
-        return xhr;
+        return xhr
     }
-    //https://stackoverflow.com/questions/3470895/small-ajax-javascript-library
+
+    function sentPostRequest(url, data){
+        var xhr = createXHR()
+        xhr.open('POST', url, true)
+        var formData = new FormData()
+
+        for (var key in data) {
+          formData.append(key, data[key])
+        }
+        xhr.send(formData)
+    }
     //------\small-xhr-library-------------
 
     Dropzone.options.ImageForRobotDropzone = {
@@ -263,46 +206,34 @@
       dictDefaultMessage: "Перетащите файл сюда или кликните для загрузки",
       init: function() {
         this.on("sending", function() {
-            saveTracertMethod();
-        });
+            saveTracertMethod()
+        })
         this.on("success", function() {
-            document.getElementById('btnShowPreview').removeAttribute("disabled");
-            document.getElementById('btnStartDrawing').removeAttribute("disabled");
-        });
+            document.getElementById('btnShowPreview').removeAttribute("disabled")
+            document.getElementById('btnStartDrawing').removeAttribute("disabled")
+        })
       }
     }
 
-    function showModal(){
-        document.getElementById('preview-modal').classList.add('show');
-    }
-
-    function closeModal(){
-        document.getElementById('preview-modal').classList.remove('show');
-    }
-
-
     function saveTracertMethod(){
-        var xhr = createXHR();
-        xhr.open('POST', '/select_tracing', true)
-
-        var formData = new FormData();
-		formData.append("select", document.querySelector('input[name="tracingMethod"]:checked').value);
-		formData.append("confirm", "confirm");
-		if (document.getElementById('tracingMethod-Shading').checked){
-			formData.append("shading", "shading");
+        var data = {
+            "select": document.querySelector('input[name="tracingMethod"]:checked').value,
+            "confirm": "confirm"
+        }
+        if (document.getElementById('tracingMethod-Shading').checked){
+			data.append("shading", "shading")
 		}
-
-        xhr.send(formData)
+        sentPostRequest('/select_tracing',data)
     }
 
     function showPreview(){
-        var xhr = createXHR();
+        var xhr = createXHR()
         xhr.onreadystatechange = function()
         {
             if (xhr.readyState === 4)
             {
-                document.getElementById('preview-image').setAttribute('src',xhr.responseText+'?'+Math.floor(Math.random() * 1000));
-                showModal();
+                document.getElementById('preview-image').setAttribute('src',xhr.responseText+'?'+Math.floor(Math.random() * 1000))
+                showModal()
             }
         }
         xhr.open('GET', '/preview-src', true)
@@ -310,20 +241,36 @@
     }
 
     function startDrawing(){
-        var xhr = createXHR();
-        xhr.open('POST', '/select_size', true)
-        var formData = new FormData();
-		formData.append("width", document.getElementById('widthPicture').value);
-		formData.append("height", document.getElementById('heightPicture').value);
-        xhr.send(formData)
+        sentPostRequest('/select_size',{
+            "width": document.getElementById('widthPicture').value,
+		    "height": document.getElementById('heightPicture').value,
+		    "confirm": "confirm"
+        })
+    }
+
+    function move(){
+        sentPostRequest('/control',{
+            "drive": _currentDirection
+        })
+        console.debug(_currentDirection + ' ' + _isMoving)
+        if (_isMoving){
+            _moveTimer = window.setTimeout(move, 1000)
+        }
     }
 
     function drive(direction){
-        var xhr = createXHR();
-        xhr.open('POST', '/control', true)
-        var formData = new FormData();
-		formData.append("drive", direction);
-        xhr.send(formData)
+        window.clearTimeout(_moveTimer)
+        _currentDirection = direction
+        _isMoving = direction !== 'stop'
+        move()
+    }
+
+    function showModal(){
+        document.getElementById('preview-modal').classList.add('show')
+    }
+
+    function closeModal(){
+        document.getElementById('preview-modal').classList.remove('show')
     }
 </script>
 </body>
