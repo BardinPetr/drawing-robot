@@ -186,9 +186,21 @@ class ManipulatorControl:
         joints[5] = -math.radians(100)
         self.move_joints(joints)
         
-        angles = [0]
-        flag = True
+        '''self.plane_orient = self.get_rot(as_rv=True)
+        dt = 1.0 / 500
+        for i in range(100000):
+            start = time()
+            self.rtde_ctrl.forceMode([*self.plane_normal, *self.plane_orient],
+                                     [0, 0, 1, 0, 0, 0],
+                                     [0, 0, 2, 0, 0, 0],
+                                     2,
+                                     [100, 100, 100, 1, 1, 1])
+            end = time()
+            duration = end - start
+            if duration < dt:
+                sleep(dt - duration)'''
         
+        flag = True
         while flag:
             while self.rtde_recv.getAsyncOperationProgress() > -1:
                 pass
@@ -211,6 +223,8 @@ class ManipulatorControl:
                 dy = int(corners[0][0][2][1]) - int(corners[0][0][1][1])
                 angle = math.degrees(math.atan2(dx, dy))
                 print(angle)
+                if angle > 0:
+                    angle -= 360
                 self.move_joints_rel([0, 0, 0, 0, 0, -angle])
                 flag = False
             else:
@@ -229,7 +243,11 @@ class ManipulatorControl:
         cv2.imwrite("/home/main/image.jpg", frame)'''
         self.plane_orient = self.get_rot(as_rv=True)
         #dist = cam.basic_get_normal_dist()
-        dist = 0.29
+        _, depth, _ = cam.capture()
+        print("depth: " + str(depth.data))
+        dist = depth.data[int(len(depth.data)/2)][int(len(depth.data[0])/2)]/1000.0
+        #print(depth.data[int(len(depth.data)/2)][int(len(depth.data[0])/2)])
+        print("dist: " + str(dist))
         
         image_capture, _, _ = cam.capture()
         frame = cv2.cvtColor(image_capture.data, 1)
@@ -237,14 +255,14 @@ class ManipulatorControl:
         parameters = cv2.aruco.DetectorParameters_create()
         corners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
         if markerIds != None:
-            x = (int(corners[0][0][2][1]) - 1280/2)
-            y = -(int(corners[0][0][2][0]) - 720/2)
+            x = (int(corners[0][0][1][1]) - 1280/2)
+            y = -(int(corners[0][0][1][0]) - 720/2)
             X = dist*math.tan(math.radians(90)/2)*x/(1280)
             Y = dist*math.tan(math.radians(59)/2)*y/(720)
             print("X: " + str(X) + "Y: " + str(Y))
             cur_rot = self.get_rot()
-            offset = translate_one((Y + 0.04, X + 0.04, 0.0), *cur_rot)
-            #self.move_tool_rel(offset)
+            offset = translate_one((Y, X, 0.0), *cur_rot)
+            self.move_tool_rel(offset)
         
         '''cur_rot = self.get_rot()
         offset = translate_one((0.04, 0.04, 0.0), *cur_rot)
@@ -316,10 +334,10 @@ class ManipulatorControl:
         #sleep(1)
         while self.rtde_recv.getAsyncOperationProgress() > -1:
             start = time()
-            self.rtde_ctrl.forceMode([0, 0, 0, *self.plane_orient],
+            self.rtde_ctrl.forceMode([*self.plane_normal, *self.plane_orient],
                                      [0, 0, 1, 0, 0, 0],
                                      [0, 0, force, 0, 0, 0],
-                                     1,
+                                     2,
                                      [100, 100, 100, 1, 1, 1])
             end = time()
             duration = end - start

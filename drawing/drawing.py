@@ -36,7 +36,7 @@ def draw(contours, image_width, image_height, width, height):
             j += 1
         
         print("Contour len", len(cont))
-        mc.draw_contour(cont, force=0.5)
+        mc.draw_contour(cont, force=0.1)
         end_x = cont[len(cont)-1][0]
         end_y = cont[len(cont)-1][1]
         end_z = cont[len(cont)-1][2]

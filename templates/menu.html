@@ -1,15 +1,276 @@
 <!DOCTYPE html>
 <head>
-    <title>Menu</title>
-    <meta name="viewport" content="width=device-width, initial-scale=2">
+    <title>Drawing robot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/static/front/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="/static/front/dropzone.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="/static/front/joystick.css" rel="stylesheet" crossorigin="anonymous">
+    <script src="/static/front/dropzone.min.js"></script>
 </head>
 <body>
-    <h1>Select action</h1>
-    <form method=post action=/>
-        <input type=submit name=actions value="drive robot"> <br>
-        <input type=submit name=actions value="choose tracing method"> <br>
-        <input type=submit name=actions value="upload image"> <br>
-        <input type=submit name=actions value="show preview" {{ enabled }}> <br>
-        <input type=submit name=actions value="start drawing" {{ enabled }}>
-    </form>
+    <div class="container">
+        <h1 class="display-5 mt-1">Управление роботом-художником</h1>
+        <hr/>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="mb-1 mb-sm-3">
+                    <h6 class="display-6">
+                      Метод трассировки
+                    </h6>
+
+                    <div class="form-check">
+                      <input class="form-check-input" value="neuronet" type="radio" name="tracingMethod" id="tracingMethod-Neuronet" checked>
+                      <label class="form-check-label" for="tracingMethod-Neuronet">
+                        нейросеть
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" value="algorithm" type="radio" name="tracingMethod" id="tracingMethod-Algorithm">
+                      <label class="form-check-label" for="tracingMethod-Algorithm">
+                        алгоритм
+                      </label>
+                    </div>
+                    <div class="form-check mt-2">
+                      <input class="form-check-input" type="checkbox" value="shading" id="tracingMethod-Shading">
+                      <label class="form-check-label" for="tracingMethod-Shading">
+                        штриховка
+                      </label>
+                    </div>
+                </div>
+
+                <div class="mb-1 mb-sm-3">
+                    <h6 class="display-6">
+                      Загрузка изображения
+                    </h6>
+                    <form action="/upload"
+                      class="dropzone"
+                      id="ImageForRobotDropzone"></form>
+                </div>
+
+                <div class="mb-1 mb-sm-3">
+                    <h6 class="display-6">
+                      Размер области рисования
+                    </h6>
+                    <div class="mb-3">
+                      <label for="widthPicture" class="form-label">ширина, см</label>
+                      <input type="number" class="form-control form-control-sm" id="widthPicture" value="10" />
+                    </div>
+                    <div class="mb-3">
+                      <label for="heightPicture" class="form-label">высота, см</label>
+                      <input type="number" class="form-control form-control-sm" id="heightPicture" value="10" />
+                    </div>
+                </div>
+
+                <div class="modal" tabindex="-1" id="preview-modal">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-body">
+                          <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close" onclick="closeModal()"></button>
+                            <p><img src="" id="preview-image" class="img-fluid"></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+                <div>
+                    <button type="button" class="btn btn-secondary" onclick="showPreview()" id="btnShowPreview" disabled>Показать превью</button>
+                    <button type="button" class="btn btn-primary" onclick="startDrawing()" id="btnStartDrawing" disabled>Начать рисовать</button>
+                </div>
+
+            </div>
+
+
+            <div class="col-sm-6 text-end text-center">
+                <form method=post action=/control>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        xmlns:xlink="http://www.w3.org/1999/xlink" viewBox='0 0 110 110'>
+                        <defs>
+                         <!-- Фильтр для создании тени при наведении -->
+                            <filter id="drop-shadow" x="-20%" y="-20%" height="130%" width="130%">
+                              <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+                              <feOffset dx="1" dy="0" result="offsetblur"/>
+                              <feMerge>
+                                <feMergeNode/>
+                                <feMergeNode in="SourceGraphic"/>
+                              </feMerge>
+                            </filter>
+                        </defs>
+                      <!-- Сегменты окружности с рабочими ссылками Переход по клику -->
+                        <g transform="rotate(-22.5 55 55)" >
+                            <a xlink:href="javascript:drive('right');">
+                                <title> Вправо </title>
+                              <path id="s1"  d="M 55 55 L 105 55 A 50 50 0 0 1 90.35 90.35 Z"/>
+                            </a>
+                            <a xlink:href="javascript:drive('right');">
+                              <path id="s2"  d="M 55 55 L 90.35 90.35 A 50 50 0 0 1 55 105 Z"/>
+                             </a>
+
+                            <a xlink:href="javascript:drive('backward');">
+                                <title> Назад </title>
+                                <path id="s3"  d="M 55 55 L 55 105 A 50 50 0 0 1 19.6447 90.35 Z" />
+                            </a>
+                            <a xlink:href="javascript:drive('backward');">
+                                <path id="s4"  d="M 55 55 L 19.64 90.353 A 50 50 0 0 1 5 55 Z" />
+                            </a>
+
+                            <a xlink:href="javascript:drive('left');">
+                                 <title> Влево </title>
+                                <path id="s5"  d="M 55 55 L 5 55 A 50 50 0 0 1 19.64 19.64 Z" />
+                            </a>
+                            <a xlink:href="javascript:drive('left');">
+                                <path id="s6"  d="M 55 55 L 19.64 19.64 A 50 50 0 0 1 55 5 Z" />
+                            </a>
+
+                            <a xlink:href="javascript:drive('forward');">
+                                 <title> Вперед </title>
+                                <path id="s7"  d="M 55 55 L 55 5 A 50 50 0 0 1 90.35 19.64 Z" />
+                            </a>
+                            <a xlink:href="javascript:drive('forward');">
+                                <path id="s8"  d="M 55 55 L 90.35 19.64 A 50 50 0 0 1 105 55 Z" />
+                            </a>
+                        </g>
+                        <a xlink:href="javascript:drive('stop');">
+                            <title> Стоп </title>
+                            <circle id="center" cx='55' cy='55' r='17'  />
+                        </a>
+                        <!-- Белые круги -->
+                        <circle id="spot" cx='31' cy='31' r='6'   />
+                        <use xlink:href="#spot" transform="rotate(90 55 55)" />
+                        <use xlink:href="#spot" transform="rotate(-90 55 55)" />
+                        <use xlink:href="#spot" transform="rotate(180 55 55)" />
+                        <!--Белые стрелки -->
+                        <polyline id="arrow" points = "46,21 55,12 64,21" fill="none" stroke="white" />
+                        <use xlink:href="#arrow" transform="rotate(90 55 55)" />
+                        <use xlink:href="#arrow" transform="rotate(-90 55 55)" />
+                        <use xlink:href="#arrow" transform="rotate(180 55 55)" />
+                    </svg>
+                  </form>
+            </div>
+        </div>
+    </div>
+
+<!--    <h1>Select action</h1>-->
+<!--    <form method=post action=/>-->
+<!--        <input type=submit name=actions value="drive robot"> <br>-->
+<!--        <input type=submit name=actions value="choose tracing method"> <br>-->
+<!--        <input type=submit name=actions value="upload image"> <br>-->
+<!--        <input type=submit name=actions value="show preview" {{ enabled }}> <br>-->
+<!--        <input type=submit name=actions value="start drawing" {{ enabled }}>-->
+<!--    </form>-->
+
+<script>
+    var _isMoving = false
+    var _currentDirection = ''
+    var _moveTimer
+
+    //-------small-xhr-library-------------
+    function createXHR()
+    {
+        var xhr
+        if (window.ActiveXObject)
+        {
+            try
+            {
+                xhr = new ActiveXObject("Microsoft.XMLHTTP")
+            }
+            catch(e)
+            {
+                alert(e.message)
+                xhr = null
+            }
+        }
+        else
+        {
+            xhr = new XMLHttpRequest()
+        }
+        return xhr
+    }
+
+    function sentPostRequest(url, data){
+        var xhr = createXHR()
+        xhr.open('POST', url, true)
+        var formData = new FormData()
+
+        for (var key in data) {
+          formData.append(key, data[key])
+        }
+        xhr.send(formData)
+    }
+    //------\small-xhr-library-------------
+
+    Dropzone.options.ImageForRobotDropzone = {
+      paramName: "file", // The name that will be used to transfer the file
+      maxFilesize: 1, // MB
+      acceptedFiles: "image/*",
+      dictDefaultMessage: "Перетащите файл сюда или кликните для загрузки",
+      init: function() {
+        this.on("sending", function() {
+            saveTracertMethod()
+        })
+        this.on("success", function() {
+            document.getElementById('btnShowPreview').removeAttribute("disabled")
+            document.getElementById('btnStartDrawing').removeAttribute("disabled")
+        })
+      }
+    }
+
+    function saveTracertMethod(){
+        var data = {
+            "select": document.querySelector('input[name="tracingMethod"]:checked').value,
+            "confirm": "confirm"
+        }
+        if (document.getElementById('tracingMethod-Shading').checked){
+			data.append("shading", "shading")
+		}
+        sentPostRequest('/select_tracing',data)
+    }
+
+    function showPreview(){
+        var xhr = createXHR()
+        xhr.onreadystatechange = function()
+        {
+            if (xhr.readyState === 4)
+            {
+                document.getElementById('preview-image').setAttribute('src',xhr.responseText+'?'+Math.floor(Math.random() * 1000))
+                showModal()
+            }
+        }
+        xhr.open('GET', '/preview-src', true)
+        xhr.send()
+    }
+
+    function startDrawing(){
+        sentPostRequest('/select_size',{
+            "width": document.getElementById('widthPicture').value,
+		    "height": document.getElementById('heightPicture').value,
+		    "confirm": "confirm"
+        })
+    }
+
+    function move(){
+        sentPostRequest('/control',{
+            "drive": _currentDirection
+        })
+        console.debug(_currentDirection + ' ' + _isMoving)
+        if (_isMoving){
+            _moveTimer = window.setTimeout(move, 500)
+        }
+    }
+
+    function drive(direction){
+        window.clearTimeout(_moveTimer)
+        _currentDirection = direction
+        _isMoving = direction !== 'stop'
+        move()
+    }
+
+    function showModal(){
+        document.getElementById('preview-modal').classList.add('show')
+    }
+
+    function closeModal(){
+        document.getElementById('preview-modal').classList.remove('show')
+    }
+</script>
 </body>
