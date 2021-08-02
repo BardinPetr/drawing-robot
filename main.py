@@ -11,8 +11,13 @@ print("connecting to the robot...")
 #p = Platform('192.168.12.20') # подключение к платформе | закомментировать если платформа не включена
 platform_action = 0  # 0-stop/1-forward/2-backward/3-left/4-right
 
+<<<<<<< HEAD
 #UPLOAD_FOLDER = '/home/main/upload_server' # папка куда сохраняются загруженные картинки
 UPLOAD_FOLDER = 'c:\\_work\\projects\\drawing-robot\\repos\\drawing-robot\\temp\\' # папка куда сохраняются загруженные картинки
+=======
+UPLOAD_FOLDER = '/home/main/drawing-robot-upload' # папка куда сохраняются загруженные картинки
+#UPLOAD_FOLDER = 'c:\\_work\\projects\\drawing-robot\\repos\\drawing-robot\\temp\\' # папка куда сохраняются загруженные картинки
+>>>>>>> ef9008ce6315aea98d86fd96812bf1f009c01275
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'} # допустимые форматы изображений
 
 app = Flask(__name__) # инициализируем фласк
@@ -61,7 +66,11 @@ def upload(): # страница загрузки
         #     return 'not ok'
 
         #if request.form['buttons'] == '<<back':
+<<<<<<< HEAD
             #return redirect(url_for('menu'))
+=======
+        #    return redirect(url_for('menu'))
+>>>>>>> ef9008ce6315aea98d86fd96812bf1f009c01275
         file = request.files['file']
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
@@ -138,6 +147,10 @@ def select_size(): # ввод размеров рисунка
             # print('width ' + width)
             # print('height ' + height)
             global contours, w, h
+            if float(w)/float(h) > float(width)/float(height):
+                height = width*h/w
+            else:
+                width = height*w/h
             draw(contours, w, h, width, height) # рисование
             return 'drawing complete'
         else:
