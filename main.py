@@ -60,8 +60,8 @@ def upload(): # страница загрузки
         #     flash('No file part')
         #     return 'not ok'
 
-        if request.form['buttons'] == '<<back':
-            return redirect(url_for('menu'))
+        #if request.form['buttons'] == '<<back':
+            #return redirect(url_for('menu'))
         file = request.files['file']
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
