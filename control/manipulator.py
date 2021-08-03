@@ -165,6 +165,21 @@ class ManipulatorControl:
         return normals
 
     def full_calibration(self, cam): # полная калибровка нормали
+        '''dt = 1.0 / 1000.0
+        self.plane_orient = self.get_rot(as_rv=True)
+        for i in range(100000):
+            start = time()
+            self.rtde_ctrl.forceMode([0, 0, 0, *self.plane_orient],
+                                     [0, 0, 1, 0, 0, 0],
+                                     [*translate_one((0, 0, 2), *rv2rpy(self.plane_orient)), 0, 0, 0],
+                                     2,
+                                     [100, 100, 100, 1, 1, 1])
+            end = time()
+            duration = end - start
+            if duration < dt:
+                sleep(dt - duration)'''
+    
+    
         self.align_perpendicular(cam.basic_get_normal())
         normals = reduce(lambda x, i: x + self._calibrate_in_move(cam, i, 2), [
             [0, 0, 0, 0.1, 0, 0],
@@ -185,20 +200,6 @@ class ManipulatorControl:
         joints = self.get_joints()
         joints[5] = -math.radians(100)
         self.move_joints(joints)
-        
-        '''self.plane_orient = self.get_rot(as_rv=True)
-        dt = 1.0 / 500
-        for i in range(100000):
-            start = time()
-            self.rtde_ctrl.forceMode([*self.plane_normal, *self.plane_orient],
-                                     [0, 0, 1, 0, 0, 0],
-                                     [0, 0, 2, 0, 0, 0],
-                                     2,
-                                     [100, 100, 100, 1, 1, 1])
-            end = time()
-            duration = end - start
-            if duration < dt:
-                sleep(dt - duration)'''
         
         flag = True
         while flag:
@@ -244,29 +245,49 @@ class ManipulatorControl:
         self.plane_orient = self.get_rot(as_rv=True)
         #dist = cam.basic_get_normal_dist()
         _, depth, _ = cam.capture()
-        print("depth: " + str(depth.data))
+        #print("depth: " + str(depth.data))
         dist = depth.data[int(len(depth.data)/2)][int(len(depth.data[0])/2)]/1000.0
         #print(depth.data[int(len(depth.data)/2)][int(len(depth.data[0])/2)])
         print("dist: " + str(dist))
         
-        image_capture, _, _ = cam.capture()
+        '''image_capture, _, _ = cam.capture()
         frame = cv2.cvtColor(image_capture.data, 1)
         dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
         parameters = cv2.aruco.DetectorParameters_create()
         corners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
         if markerIds != None:
-            x = (int(corners[0][0][1][1]) - 1280/2)
-            y = -(int(corners[0][0][1][0]) - 720/2)
+            x = (int(corners[0][0][0][0]) - 1280/2)
+            y = (int(corners[0][0][0][1]) - 720/2)
             X = dist*math.tan(math.radians(90)/2)*x/(1280)
             Y = dist*math.tan(math.radians(59)/2)*y/(720)
             print("X: " + str(X) + "Y: " + str(Y))
             cur_rot = self.get_rot()
-            offset = translate_one((Y, X, 0.0), *cur_rot)
-            self.move_tool_rel(offset)
+            offset = translate_one((X, Y, 0.0), *cur_rot)
+            self.move_tool_rel(offset)'''
         
-        '''cur_rot = self.get_rot()
-        offset = translate_one((0.04, 0.04, 0.0), *cur_rot)
-        self.move_tool_rel(offset)'''
+        flag = True
+        while flag:
+            image_capture, _, _ = cam.capture()
+            frame = cv2.cvtColor(image_capture.data, 1)
+            dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
+            parameters = cv2.aruco.DetectorParameters_create()
+            corners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
+            if markerIds != None:
+                x = (int(corners[0][0][2][0]) - 1280/2)
+                y = (int(corners[0][0][2][1]) - 720/2)
+                if abs(x) < 1 and abs(y) < 1:
+                    flag = False
+                print("x: " + str(x) + " y: " + str(y))
+                x = max(-15, min(15, x))
+                y = max(-15, min(15, y))
+                cur_rot = self.get_rot()
+                speed = translate_one((x/1000.0, y/1000.0, 0.0), *cur_rot)
+                self.rtde_ctrl.jogStart([*speed, 0, 0, 0])
+        
+        self.rtde_ctrl.jogStop()
+        cur_rot = self.get_rot()
+        offset = translate_one((0.042, -0.035, 0.0), *cur_rot)
+        self.move_tool_rel(offset)
         print("dist: " + str(dist))
         return normal
 
@@ -316,27 +337,15 @@ class ManipulatorControl:
         
         self.rtde_ctrl.moveUntilContact([*(self.plane_normal * 0.01), 0, 0, 0])
         
-        '''for i in range(1000):
-            start = time()
-            self.rtde_ctrl.forceMode([0, 0, 0, *self.plane_orient],
-                                     [0, 0, 1, 0, 0, 0],
-                                     [0, 0, force, 0, 0, 0],
-                                     1,
-                                     [100, 100, 100, 1, 1, 1])
-            end = time()
-            duration = end - start
-            if duration < dt:
-                sleep(dt - duration)'''
-        
         pos = [[*i, *self.plane_orient, 0.3, 0.2, 0] for i in data]
         #pos = [[*i, *self.plane_orient, 0.5, 0.4, 0] for i in data]
         self.rtde_ctrl.moveL(pos, True)
         #sleep(1)
         while self.rtde_recv.getAsyncOperationProgress() > -1:
             start = time()
-            self.rtde_ctrl.forceMode([*self.plane_normal, *self.plane_orient],
+            self.rtde_ctrl.forceMode([0, 0, 0, *self.plane_orient],
                                      [0, 0, 1, 0, 0, 0],
-                                     [0, 0, force, 0, 0, 0],
+                                     [*translate_one((0, 0, force), *rv2rpy(self.plane_orient)), 0, 0, 0],
                                      2,
                                      [100, 100, 100, 1, 1, 1])
             end = time()

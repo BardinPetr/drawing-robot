@@ -49,11 +49,7 @@
 
                 <div class="mb-1 mb-sm-3">
                     <h6 class="display-6">
-<<<<<<< HEAD
-                      Размер рисунка
-=======
-                      Размер области рисования
->>>>>>> ef9008ce6315aea98d86fd96812bf1f009c01275
+                        Размер области рисования
                     </h6>
                     <div class="mb-3">
                       <label for="widthPicture" class="form-label">ширина, см</label>
@@ -102,7 +98,7 @@
                         </defs>
                       <!-- Сегменты окружности с рабочими ссылками Переход по клику -->
                         <g transform="rotate(-22.5 55 55)" >
-<<<<<<< HEAD
+
                             <a xlink:href="#" onmousedown="drive('right')" onmouseup="drive('stop')">
                                 <title> Вправо </title>
                               <path id="s1"  d="M 55 55 L 105 55 A 50 50 0 0 1 90.35 90.35 Z"/>
@@ -132,37 +128,6 @@
                                 <path id="s7"  d="M 55 55 L 55 5 A 50 50 0 0 1 90.35 19.64 Z" />
                             </a>
                             <a xlink:href="#" onmousedown="drive('forward')" onmouseup="drive('stop')">
-=======
-                            <a xlink:href="javascript:drive('right');">
-                                <title> Вправо </title>
-                              <path id="s1"  d="M 55 55 L 105 55 A 50 50 0 0 1 90.35 90.35 Z"/>
-                            </a>
-                            <a xlink:href="javascript:drive('right');">
-                              <path id="s2"  d="M 55 55 L 90.35 90.35 A 50 50 0 0 1 55 105 Z"/>
-                             </a>
-
-                            <a xlink:href="javascript:drive('backward');">
-                                <title> Назад </title>
-                                <path id="s3"  d="M 55 55 L 55 105 A 50 50 0 0 1 19.6447 90.35 Z" />
-                            </a>
-                            <a xlink:href="javascript:drive('backward');">
-                                <path id="s4"  d="M 55 55 L 19.64 90.353 A 50 50 0 0 1 5 55 Z" />
-                            </a>
-
-                            <a xlink:href="javascript:drive('left');">
-                                 <title> Влево </title>
-                                <path id="s5"  d="M 55 55 L 5 55 A 50 50 0 0 1 19.64 19.64 Z" />
-                            </a>
-                            <a xlink:href="javascript:drive('left');">
-                                <path id="s6"  d="M 55 55 L 19.64 19.64 A 50 50 0 0 1 55 5 Z" />
-                            </a>
-
-                            <a xlink:href="javascript:drive('forward');">
-                                 <title> Вперед </title>
-                                <path id="s7"  d="M 55 55 L 55 5 A 50 50 0 0 1 90.35 19.64 Z" />
-                            </a>
-                            <a xlink:href="javascript:drive('forward');">
->>>>>>> ef9008ce6315aea98d86fd96812bf1f009c01275
                                 <path id="s8"  d="M 55 55 L 90.35 19.64 A 50 50 0 0 1 105 55 Z" />
                             </a>
                         </g>
@@ -241,7 +206,7 @@
       acceptedFiles: "image/*",
       dictDefaultMessage: "Перетащите файл сюда или кликните для загрузки",
       init: function() {
-        this.on("sending", function() {
+        this.on("addedfile", function() {
             saveTracertMethod()
         })
         this.on("success", function() {
@@ -268,6 +233,7 @@
         {
             if (xhr.readyState === 4)
             {
+                document.getElementById('preview-image').removeAttribute('src')
                 document.getElementById('preview-image').setAttribute('src',xhr.responseText+'?'+Math.floor(Math.random() * 1000))
                 showModal()
             }
@@ -288,11 +254,6 @@
         sentPostRequest('/control',{
             "drive": _currentDirection
         })
-<<<<<<< HEAD
-        //console.debug(_currentDirection)
-=======
-        console.debug(_currentDirection + ' ' + _isMoving)
->>>>>>> ef9008ce6315aea98d86fd96812bf1f009c01275
         if (_isMoving){
             _moveTimer = window.setTimeout(move, 500)
         }

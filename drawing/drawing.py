@@ -22,6 +22,7 @@ def draw(contours, image_width, image_height, width, height):
     end_x = data_m[0][0][0]
     end_y = data_m[0][0][1]
     end_z = data_m[0][0][2]
+    max_length = len(data_m)
     while len(data_m) > 0:
         cont = data_m[0]
         cont_dist = (end_x - cont[0][0])**2 + (end_y - cont[0][1])**2 + (end_z - cont[0][2])**2
@@ -35,12 +36,15 @@ def draw(contours, image_width, image_height, width, height):
                 index = j
             j += 1
         
-        print("Contour len", len(cont))
-        mc.draw_contour(cont, force=0.1)
+        print("Contour len:", len(cont))
+        print("Done:" + str(round(100*(1 - len(data_m)/max_length), 2)) + "%")
+        mc.draw_contour(cont, force=0.5)
         end_x = cont[len(cont)-1][0]
         end_y = cont[len(cont)-1][1]
         end_z = cont[len(cont)-1][2]
         data_m.pop(index)   
-        
+       
+    print("Done: 100%")
+    print("Drawing complete")
     mc.pen_start(dist=0.05)
     

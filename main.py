@@ -1,23 +1,19 @@
-import os, time, threading
+import os, time, threading, cv2
 from flask import Flask, request, render_template, redirect, url_for
 from werkzeug.utils import secure_filename
 
 from tracing.tracing import tracing
 from control.platform import Platform
 from drawing.drawing import draw
+from modules.tracer import trace_img
 
 
 print("connecting to the robot...")
 #p = Platform('192.168.12.20') # подключение к платформе | закомментировать если платформа не включена
 platform_action = 0  # 0-stop/1-forward/2-backward/3-left/4-right
 
-<<<<<<< HEAD
-#UPLOAD_FOLDER = '/home/main/upload_server' # папка куда сохраняются загруженные картинки
-UPLOAD_FOLDER = 'c:\\_work\\projects\\drawing-robot\\repos\\drawing-robot\\temp\\' # папка куда сохраняются загруженные картинки
-=======
 UPLOAD_FOLDER = '/home/main/drawing-robot-upload' # папка куда сохраняются загруженные картинки
 #UPLOAD_FOLDER = 'c:\\_work\\projects\\drawing-robot\\repos\\drawing-robot\\temp\\' # папка куда сохраняются загруженные картинки
->>>>>>> ef9008ce6315aea98d86fd96812bf1f009c01275
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'} # допустимые форматы изображений
 
 app = Flask(__name__) # инициализируем фласк
@@ -66,11 +62,7 @@ def upload(): # страница загрузки
         #     return 'not ok'
 
         #if request.form['buttons'] == '<<back':
-<<<<<<< HEAD
-            #return redirect(url_for('menu'))
-=======
         #    return redirect(url_for('menu'))
->>>>>>> ef9008ce6315aea98d86fd96812bf1f009c01275
         file = request.files['file']
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
@@ -81,12 +73,17 @@ def upload(): # страница загрузки
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             global image_loaded
+            global contours, w, h
             if tracing_method:
                 image_loaded = True
-                global contours, w, h
                 contours, w, h = tracing(filename, shading=shading) # производим трейсинг изображения
             else:
-                return 'Neuronet is not available. Choose another tracing method please.'
+                image_loaded = True
+                cont_f, contours, file, img =  trace_img(filename)
+                (h, w, _) = img.shape
+                cv2.imwrite("/home/main/drawing-robot-upload/static/preview.jpg", img)
+                os.remove("/home/main/drawing-robot-upload/" + filename)
+                #return 'Neuronet is not available. Choose another tracing method please.'
             return redirect(url_for('menu'))
     return render_template('upload_page.html')
 
@@ -152,7 +149,7 @@ def select_size(): # ввод размеров рисунка
             else:
                 width = height*w/h
             draw(contours, w, h, width, height) # рисование
-            return 'drawing complete'
+            return redirect(url_for('menu'))
         else:
             return redirect(url_for('menu'))
     return render_template('select_size.html')
