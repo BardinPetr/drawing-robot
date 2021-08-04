@@ -9,7 +9,7 @@ from modules.tracer import trace_img
 
 
 print("connecting to the robot...")
-#p = Platform('192.168.12.20') # подключение к платформе | закомментировать если платформа не включена
+p = Platform('192.168.12.20') # подключение к платформе | закомментировать если платформа не включена
 platform_action = 0  # 0-stop/1-forward/2-backward/3-left/4-right
 
 UPLOAD_FOLDER = '/home/main/drawing-robot-upload' # папка куда сохраняются загруженные картинки
@@ -74,6 +74,7 @@ def upload(): # страница загрузки
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             global image_loaded
             global contours, w, h
+            global tracing_method
             if tracing_method:
                 image_loaded = True
                 contours, w, h = tracing(filename, shading=shading) # производим трейсинг изображения
@@ -110,19 +111,19 @@ def control(): # управление платформой
         button = request.form['drive']
         print(button)
         if button == 'forward':
-            #p.drive(0.1, 0.0)
+            p.drive(0.1, 0.0)
             platform_action = 1
         if button == 'backward':
-            #p.drive(-0.1, 0.0)
+            p.drive(-0.1, 0.0)
             platform_action = 2
         if button == 'left':
-            #p.drive(0.0, 0.1)
+            p.drive(0.0, 0.1)
             platform_action = 3
         if button == 'right':
-            #p.drive(0.0, -0.1)
+            p.drive(0.0, -0.1)
             platform_action = 4
         if button == 'stop':
-            #p.drive(0.0, 0.0)
+            p.drive(0.0, 0.0)
             platform_action = 0
 
         if button == '<<back':

@@ -329,7 +329,7 @@ class ManipulatorControl:
 
     def draw_contour(self, data, dt=1.0 / 500, force=1): # рисование контура
         # self.pen_up()
-        start = [[*(data[0] - self.plane_normal * 0.01), *self.plane_orient, 0.3, 0.2, 0]]
+        start = [[*(data[0] - self.plane_normal * 0.03), *self.plane_orient, 0.3, 0.2, 0]]
         self.rtde_ctrl.moveL(start, True)
         
         while self.rtde_recv.getAsyncOperationProgress() > -1:

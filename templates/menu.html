@@ -99,35 +99,35 @@
                       <!-- Сегменты окружности с рабочими ссылками Переход по клику -->
                         <g transform="rotate(-22.5 55 55)" >
 
-                            <a xlink:href="#" onmousedown="drive('right')" onmouseup="drive('stop')">
+                            <a class="a-drive" direction="right">
                                 <title> Вправо </title>
                               <path id="s1"  d="M 55 55 L 105 55 A 50 50 0 0 1 90.35 90.35 Z"/>
                             </a>
-                            <a xlink:href="#" onmousedown="drive('right')" onmouseup="drive('stop')">
+                            <a class="a-drive" direction="right">
                               <path id="s2"  d="M 55 55 L 90.35 90.35 A 50 50 0 0 1 55 105 Z"/>
                              </a>
 
-                            <a xlink:href="#" onmousedown="drive('backward')" onmouseup="drive('stop')">
+                            <a class="a-drive" direction="backward">
                                 <title> Назад </title>
                                 <path id="s3"  d="M 55 55 L 55 105 A 50 50 0 0 1 19.6447 90.35 Z" />
                             </a>
-                            <a xlink:href="#" onmousedown="drive('backward')" onmouseup="drive('stop')">
+                            <a class="a-drive" direction="backward">
                                 <path id="s4"  d="M 55 55 L 19.64 90.353 A 50 50 0 0 1 5 55 Z" />
                             </a>
 
-                            <a xlink:href="#" onmousedown="drive('left')" onmouseup="drive('stop')">
+                            <a class="a-drive" direction="left">
                                  <title> Влево </title>
                                 <path id="s5"  d="M 55 55 L 5 55 A 50 50 0 0 1 19.64 19.64 Z" />
                             </a>
-                            <a xlink:href="#" onmousedown="drive('left')" onmouseup="drive('stop')">
+                            <a class="a-drive" direction="left">
                                 <path id="s6"  d="M 55 55 L 19.64 19.64 A 50 50 0 0 1 55 5 Z" />
                             </a>
 
-                            <a xlink:href="#" onmousedown="drive('forward')" onmouseup="drive('stop')">
+                            <a class="a-drive" direction="forward">
                                  <title> Вперед </title>
                                 <path id="s7"  d="M 55 55 L 55 5 A 50 50 0 0 1 90.35 19.64 Z" />
                             </a>
-                            <a xlink:href="#" onmousedown="drive('forward')" onmouseup="drive('stop')">
+                            <a class="a-drive" direction="forward">
                                 <path id="s8"  d="M 55 55 L 90.35 19.64 A 50 50 0 0 1 105 55 Z" />
                             </a>
                         </g>
@@ -216,6 +216,30 @@
       }
     }
 
+    window.onload = function() {
+        document.querySelectorAll(".a-drive").forEach(function(item){
+            item.addEventListener("touchstart", function(e){
+				e.preventDefault()
+                drive(this.getAttribute("direction"))
+            })
+            item.addEventListener("touchend", function(e){
+			    e.preventDefault()
+                drive("stop")
+            })
+            item.addEventListener("mousedown", function(e){
+			    e.preventDefault()
+                drive(this.getAttribute("direction"))
+            })
+            item.addEventListener("mouseup", function(e){
+			    e.preventDefault()
+                drive("stop")
+            })
+			item.addEventListener("click", function(){
+				return false
+			})
+        })
+    }
+
     function saveTracertMethod(){
         var data = {
             "select": document.querySelector('input[name="tracingMethod"]:checked').value,
@@ -254,6 +278,7 @@
         sentPostRequest('/control',{
             "drive": _currentDirection
         })
+        //console.debug(_currentDirection)
         if (_isMoving){
             _moveTimer = window.setTimeout(move, 500)
         }
