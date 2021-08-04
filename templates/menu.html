@@ -99,7 +99,7 @@
                       <!-- Сегменты окружности с рабочими ссылками Переход по клику -->
                         <g transform="rotate(-22.5 55 55)" >
 
-                            <a class="a-drive" direction="right">
+                            <a title="Вправо" class="a-drive" direction="right">
                                 <title> Вправо </title>
                               <path id="s1"  d="M 55 55 L 105 55 A 50 50 0 0 1 90.35 90.35 Z"/>
                             </a>
@@ -131,9 +131,9 @@
                                 <path id="s8"  d="M 55 55 L 90.35 19.64 A 50 50 0 0 1 105 55 Z" />
                             </a>
                         </g>
-                        <a xlink:href="javascript:drive('stop');">
+                        <a onclick="javascript:drive('stop');">
                             <title> Стоп </title>
-                            <circle id="center" cx='55' cy='55' r='17'  />
+                            <circle id="center" cx='55' cy='55' r='17'  />a
                         </a>
                         <!-- Белые круги -->
                         <circle id="spot" cx='31' cy='31' r='6'   />
@@ -219,24 +219,24 @@
     window.onload = function() {
         document.querySelectorAll(".a-drive").forEach(function(item){
             item.addEventListener("touchstart", function(e){
-				e.preventDefault()
+                e.preventDefault()
                 drive(this.getAttribute("direction"))
             })
             item.addEventListener("touchend", function(e){
-			    e.preventDefault()
+                e.preventDefault()
                 drive("stop")
             })
             item.addEventListener("mousedown", function(e){
-			    e.preventDefault()
+                e.preventDefault()
                 drive(this.getAttribute("direction"))
             })
             item.addEventListener("mouseup", function(e){
-			    e.preventDefault()
+                e.preventDefault()
                 drive("stop")
             })
-			item.addEventListener("click", function(){
-				return false
-			})
+            item.addEventListener("click", function(){
+                return false
+            })
         })
     }
 
