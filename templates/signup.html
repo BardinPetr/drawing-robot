@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<head>
+    <title>Drawing robot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/static/front/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1 class="display-5 mt-1">Управление роботом-художником</h1>
+        <hr/>
+        <form method="POST" action="/login">
+            <div class="mb-3 row">
+                <label for="inputLogin" class="col-sm-2 col-form-label text-end">Логин</label>
+                <div class="col-sm-4">
+                  <input type="text" class="form-control" id="inputLogin" value="">
+                </div>
+              </div>
+              <div class="mb-3 row">
+                <label for="inputPassword" class="col-sm-2 col-form-label text-end">Пароль</label>
+                <div class="col-sm-4">
+                  <input type="password" class="form-control" id="inputPassword">
+                </div>
+              </div>
+            <div class="mb-3 row">
+                <div class="col-sm-4 offset-sm-2">
+                  <button type="submit" class="btn btn-primary mb-3">Войти</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</body>
